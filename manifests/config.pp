@@ -297,6 +297,12 @@ class graphite::config inherits graphite::params {
       user    => root,
     }
   }
+
+  $init_templates = $::graphite::gr_pip_install ? {
+    true    => 'pip',
+    default => 'system',
+  }
+
   # startup carbon engine
 
   if $::graphite::gr_enable_carbon_cache {
@@ -311,7 +317,7 @@ class graphite::config inherits graphite::params {
 
     file { '/etc/init.d/carbon-cache':
       ensure  => file,
-      content => template("graphite/etc/init.d/${::osfamily}/carbon-cache.erb"),
+      content => template("graphite/etc/init.d/${::osfamily}/${init_templates}/carbon-cache.erb"),
       mode    => '0750',
       require => File[$carbon_conf_file],
       notify  => $initscript_notify,

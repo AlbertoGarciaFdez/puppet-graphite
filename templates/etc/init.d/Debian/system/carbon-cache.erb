@@ -1,0 +1,128 @@
+#! /bin/sh
+### BEGIN INIT INFO
+# Provides:          carbon-cache
+# Required-Start:    $remote_fs $syslog $network
+# Required-Stop:     $remote_fs $syslog $network
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Graphite Carbon backend daemon
+# Description:       backend data caching and persistence daemon for Graphite
+### END INIT INFO
+
+# Author: Jonas Genannt <jonas.genannt@capi2name.de>
+
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+DESC="Graphite backend daemon"
+NAME=carbon-cache
+DAEMON=/usr/bin/$NAME
+PIDDIR="/var/run/carbon/"
+DAEMON_ARGS="--config=/etc/carbon/carbon.conf"
+SCRIPTNAME=/etc/init.d/$NAME
+NFILES=1024
+
+INSTANCES="a b c d "
+
+[ -x "$DAEMON" ] || exit 0
+
+[ -r /etc/default/graphite-carbon ] && . /etc/default/graphite-carbon
+
+. /lib/lsb/init-functions
+
+if [ ! -r /etc/carbon/carbon.conf ]; then
+        [ "$VERBOSE" != no ] && echo "Missing /etc/carbon/carbon.conf - not starting."
+        exit 0
+fi
+
+if [ "$CARBON_CACHE_ENABLED" != "true" ] ; then
+        [ "$VERBOSE" != no ] && echo "carbon-cache disabled in /etc/default/graphite-carbon"
+        exit 0
+fi
+
+do_start()
+{
+        local INSTANCE PIDFILE
+        INSTANCE="$1"
+        PIDFILE="${PIDDIR}/carbon-cache-${INSTANCE}.pid"
+        ulimit -n $NFILES
+        start-stop-daemon --start --quiet --pidfile $PIDFILE --exec $DAEMON --test > /dev/null \
+                || return 1
+        start-stop-daemon --start --quiet --pidfile $PIDFILE --exec $DAEMON -c _graphite -g _graphite -- \
+                $DAEMON_ARGS --instance=${INSTANCE} start\
+                || return 2
+}
+
+do_stop()
+{
+        local INSTANCE PIDFILE
+        INSTANCE="$1"
+        PIDFILE="${PIDDIR}/carbon-cache-${INSTANCE}.pid"
+        start-stop-daemon --stop --quiet --retry=TERM/30/KILL/5 --pidfile $PIDFILE --name $NAME
+        RETVAL="$?"
+        [ "$RETVAL" = 2 ] && return 2
+
+        start-stop-daemon --stop --quiet --oknodo --retry=0/30/KILL/5 --exec $DAEMON
+        [ "$?" = 2 ] && return 2
+
+        rm -f $PIDFILE
+        return "$RETVAL"
+}
+
+case "$1" in
+        start)
+            for INSTANCE in ${INSTANCES}
+            do
+                [ "$VERBOSE" != no ] && log_daemon_msg "Starting $DESC" "$NAME $INSTANCE: "
+                do_start ${INSTANCE}
+                case "$?" in
+                    0|1) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
+                    2) [ "$VERBOSE" != no ] && log_end_msg 1 ;;
+                esac
+            done
+        ;;
+        stop)
+            for INSTANCE in ${INSTANCES}
+            do
+                [ "$VERBOSE" != no ] && log_daemon_msg "Stopping $DESC" "$NAME (instance $INSTANCE)"
+                do_stop ${INSTANCE}
+                case "$?" in
+                    0|1) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
+                    2) [ "$VERBOSE" != no ] && log_end_msg 1 ;;
+                esac
+            done
+        ;;
+        status)
+            retcode=0
+            for INSTANCE in ${INSTANCES}
+            do
+                status_of_proc -p "${PIDDIR}/carbon-cache-${INSTANCE}.pid" "$DAEMON" "$NAME (instance $INSTANCE)"
+                [ $? != 0 ] && retcode=$?
+            done
+            exit $retcode
+        ;;
+        restart|force-reload)
+            for INSTANCE in ${INSTANCES}
+            do
+                log_daemon_msg "Restarting $DESC" "$NAME: "
+                do_stop $INSTANCE
+                case "$?" in
+                    0|1)
+                        do_start $INSTANCE
+                        case "$?" in
+                            0) log_end_msg 0 ;;
+                            1) log_end_msg 1 ;;
+                            *) log_end_msg 1 ;;
+                        esac
+                        ;;
+                    *)
+                        log_end_msg 1
+                        ;;
+                esac
+            done
+            ;;
+        *)
+        echo "Usage: $SCRIPTNAME {start|stop|status|restart|force-reload}" >&2
+        exit 3
+        ;;
+esac
+
+:
