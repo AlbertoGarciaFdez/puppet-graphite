@@ -15,12 +15,20 @@ PATH=/sbin:/usr/sbin:/bin:/usr/bin
 DESC="Graphite backend daemon"
 NAME=carbon-cache
 DAEMON=/usr/bin/$NAME
+USER=<%= scope.lookupvar('graphite::gr_user') %>
+GROUP=<%= scope.lookupvar('graphite::gr_group') %>
+CONFIG=<%= scope.lookupvar('graphite::config::carbon_conf_file') %>
 PIDDIR="/var/run/carbon/"
-DAEMON_ARGS="--config=/etc/carbon/carbon.conf"
+DAEMON_ARGS="--config=${CONFIG}"
 SCRIPTNAME=/etc/init.d/$NAME
-NFILES=1024
 
-INSTANCES="a b c d "
+OPERATION="$1"
+if [ $# -gt 1 ]; then
+    shift
+    INSTANCES=$*
+else
+    INSTANCES=$(grep "^\[cache:" ${CONFIG} | cut -d \[ -f 2 | cut -d \] -f 1 | cut -d : -f 2)
+fi
 
 [ -x "$DAEMON" ] || exit 0
 
@@ -28,8 +36,8 @@ INSTANCES="a b c d "
 
 . /lib/lsb/init-functions
 
-if [ ! -r /etc/carbon/carbon.conf ]; then
-        [ "$VERBOSE" != no ] && echo "Missing /etc/carbon/carbon.conf - not starting."
+if [ ! -r "${CONFIG}" ]; then
+        [ "$VERBOSE" != no ] && echo "Missing ${CONFIG} - not starting."
         exit 0
 fi
 
@@ -43,10 +51,13 @@ do_start()
         local INSTANCE PIDFILE
         INSTANCE="$1"
         PIDFILE="${PIDDIR}/carbon-cache-${INSTANCE}.pid"
-        ulimit -n $NFILES
+        <% if scope.lookupvar('graphite::gr_carbon_relay_ulimit') -%>
+        ulimit -n <%= scope.lookupvar('graphite::gr_carbon_relay_ulimit') %>
+        <% end -%>
+
         start-stop-daemon --start --quiet --pidfile $PIDFILE --exec $DAEMON --test > /dev/null \
                 || return 1
-        start-stop-daemon --start --quiet --pidfile $PIDFILE --exec $DAEMON -c _graphite -g _graphite -- \
+        start-stop-daemon --start --quiet --pidfile $PIDFILE --exec $DAEMON -c ${USER} -g ${GROUP} -- \
                 $DAEMON_ARGS --instance=${INSTANCE} start\
                 || return 2
 }
