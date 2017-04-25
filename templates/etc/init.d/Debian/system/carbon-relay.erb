@@ -1,65 +1,68 @@
 #! /bin/sh
 ### BEGIN INIT INFO
-# Provides:          carbon-cache
+# Provides:          carbon-relay
 # Required-Start:    $remote_fs $syslog $network
 # Required-Stop:     $remote_fs $syslog $network
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Short-Description: Graphite Carbon backend daemon
-# Description:       backend data caching and persistence daemon for Graphite
+# Short-Description: Graphite relay daemon
+# Description:       replication and sharding daemon for Graphite
 ### END INIT INFO
 
 # Author: Jonas Genannt <jonas.genannt@capi2name.de>
 # Author: Jose Plana <jplana@tuenti.com>
 
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
-DESC="Graphite backend daemon"
-NAME=carbon-cache
+DESC="Graphite relay daemon"
+NAME=carbon-relay
 DAEMON=/usr/bin/$NAME
 USER=<%= scope.lookupvar('graphite::gr_user') %>
 GROUP=<%= scope.lookupvar('graphite::gr_group') %>
 CONFIG=<%= scope.lookupvar('graphite::config::carbon_conf_file') %>
+CONFIG=<%= scope.lookupvar('graphite::config::carbon_conf_file') %>
 PIDDIR="/var/run/carbon/"
 DAEMON_ARGS="--config=${CONFIG}"
 SCRIPTNAME=/etc/init.d/$NAME
+MAINLOGDIR=/var/log/carbon
 
 OPERATION="$1"
 if [ $# -gt 1 ]; then
     shift
     INSTANCES=$*
 else
-    INSTANCES=$(grep "^\[cache:" ${CONFIG} | cut -d \[ -f 2 | cut -d \] -f 1 | cut -d : -f 2)
+    INSTANCES=$(grep "^\[relay:" ${CONFIG} | cut -d \[ -f 2 | cut -d \] -f 1 | cut -d : -f 2)
 fi
 
 [ -x "$DAEMON" ] || exit 0
 
-[ -r /etc/default/graphite-carbon ] && . /etc/default/graphite-carbon
+[ -r /etc/default/graphite-relay ] && . /etc/default/graphite-relay
 
 . /lib/lsb/init-functions
 
-if [ ! -r "${CONFIG}" ]; then
-        [ "$VERBOSE" != no ] && echo "Missing ${CONFIG} - not starting."
+if [ ! -r /etc/carbon/carbon.conf ]; then
+[ "$VERBOSE" != no ] && echo "Missing ${CONFIG} - not starting."
         exit 3
 fi
 
-if [ "$CARBON_CACHE_ENABLED" != "true" ] ; then
-        [ "$VERBOSE" != no ] && echo "carbon-cache disabled in /etc/default/graphite-carbon"
+if [ "$CARBON_RELAY_ENABLED" != "true" ] ; then
+        [ "$VERBOSE" != no ] && echo "carbon-relay disabled in /etc/default/graphite-relay"
         exit 3
 fi
 
 do_start()
 {
-        local INSTANCE PIDFILE
+        local INSTANCE PIDFILE LOGDIR
         INSTANCE="$1"
-        PIDFILE="${PIDDIR}/carbon-cache-${INSTANCE}.pid"
-        <% if scope.lookupvar('graphite::gr_carbon_relay_ulimit') -%>
+        PIDFILE="${PIDDIR}/carbon-relay-${INSTANCE}.pid"
+        LOGDIR="${MAINLOGDIR}/carbon-relay-${INSTANCE}"
+	<% if scope.lookupvar('graphite::gr_carbon_relay_ulimit') -%>
         ulimit -n <%= scope.lookupvar('graphite::gr_carbon_relay_ulimit') %>
         <% end -%>
 
         start-stop-daemon --start --quiet --pidfile $PIDFILE --exec $DAEMON --test > /dev/null \
                 || return 1
-        start-stop-daemon --start --quiet --pidfile $PIDFILE --exec $DAEMON -c ${USER} -g ${GROUP} -- \
-                $DAEMON_ARGS --instance=${INSTANCE} start\
+	start-stop-daemon --start --quiet --pidfile $PIDFILE --exec $DAEMON -c ${USER} -g ${GROUP} -- \
+                $DAEMON_ARGS --instance=${INSTANCE} --pidfile=$PIDFILE --logdir=${LOGDIR} start\
                 || return 2
 }
 
@@ -67,7 +70,7 @@ do_stop()
 {
         local INSTANCE PIDFILE
         INSTANCE="$1"
-        PIDFILE="${PIDDIR}/carbon-cache-${INSTANCE}.pid"
+        PIDFILE="${PIDDIR}/carbon-relay-${INSTANCE}.pid"                                                                                                                                                                                                                  [36/345]
         start-stop-daemon --stop --quiet --retry=TERM/30/KILL/5 --pidfile $PIDFILE --name $NAME
         RETVAL="$?"
         [ "$RETVAL" = 2 ] && return 2
@@ -103,10 +106,10 @@ case "$1" in
             done
         ;;
         status)
-            retcode=0
+          retcode=0                                                                                                                                                                                                                                                      [0/345]
             for INSTANCE in ${INSTANCES}
             do
-                status_of_proc -p "${PIDDIR}/carbon-cache-${INSTANCE}.pid" "$DAEMON" "$NAME (instance $INSTANCE)"
+                status_of_proc "$DAEMON" "$NAME (instance $INSTANCE)" -p "${PIDDIR}/carbon-relay-${INSTANCE}.pid"
                 [ $? != 0 ] && retcode=$?
             done
             exit $retcode

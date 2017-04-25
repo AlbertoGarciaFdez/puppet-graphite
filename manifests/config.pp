@@ -336,7 +336,7 @@ class graphite::config inherits graphite::params {
 
     file { '/etc/init.d/carbon-relay':
       ensure  => file,
-      content => template("graphite/etc/init.d/${::osfamily}/carbon-relay.erb"),
+      content => template("graphite/etc/init.d/${::osfamily}/${init_templates}/carbon-relay.erb"),
       mode    => '0750',
       require => File[$carbon_conf_file],
       notify  => $initscript_notify,
@@ -355,7 +355,7 @@ class graphite::config inherits graphite::params {
 
     file { '/etc/init.d/carbon-aggregator':
       ensure  => file,
-      content => template("graphite/etc/init.d/${::osfamily}/carbon-aggregator.erb"),
+      content => template("graphite/etc/init.d/${::osfamily}/${init_templates}/carbon-aggregator.erb"),
       mode    => '0750',
       require => File[$carbon_conf_file],
       notify  => $initscript_notify,
