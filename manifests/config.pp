@@ -219,6 +219,7 @@ class graphite::config inherits graphite::params {
 
   if $::graphite::gr_enable_carbon_cache {
     if $service_provider == 'systemd' {
+      $service_cache = []
       "${::graphite::gr_cache_instances}".each |$name| {
         $service_cache = $service_cache + Service["carbon-cache@${name}"]
       }
@@ -229,6 +230,7 @@ class graphite::config inherits graphite::params {
 
   if $::graphite::gr_enable_carbon_relay {
     if $service_provider == 'systemd' {
+      $service_relay = []
       "${::graphite::gr_relay_instances}".each |$name| {
         $service_relay = $service_relay + Service["carbon-relay@${name}"]
       }
@@ -239,6 +241,7 @@ class graphite::config inherits graphite::params {
 
   if $::graphite::gr_enable_carbon_aggregator {
     if $service_provider == 'systemd' {
+      $service_aggregator = []
       "${::graphite::gr_cache_instances}".each |$name| {
         $service_aggregator = $service_aggregator + Service["carbon-aggregator@${name}"]
       }
