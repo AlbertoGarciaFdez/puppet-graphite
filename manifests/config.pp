@@ -317,7 +317,7 @@ class graphite::config inherits graphite::params {
   # startup carbon engine
 
   if $::graphite::gr_enable_carbon_cache {
-    service { "${carbon_cache_daemon}":
+    service { 'carbon-cache':
       ensure     => running,
       enable     => true,
       hasrestart => true,
@@ -346,7 +346,7 @@ class graphite::config inherits graphite::params {
   }
 
   if $graphite::gr_enable_carbon_relay {
-    service { "${carbon_relay_daemon}":
+    service { 'carbon-relay':
       ensure     => running,
       enable     => true,
       hasrestart => true,
@@ -375,7 +375,7 @@ class graphite::config inherits graphite::params {
   }
 
   if $graphite::gr_enable_carbon_aggregator {
-    service { "${carbon_aggregator_daemon}":
+    service { 'carbon-aggregator':
       ensure     => running,
       enable     => true,
       hasrestart => true,
