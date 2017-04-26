@@ -220,19 +220,19 @@ class graphite::config inherits graphite::params {
 
   # configure carbon engines
   if $::graphite::gr_enable_carbon_cache {
-    $service_cache = Service['carbon-cache']
+    $service_cache = Service["${carbon_cache_daemon}"]
   } else {
     $service_cache = undef
   }
 
   if $::graphite::gr_enable_carbon_relay {
-    $service_relay = Service['carbon-relay']
+    $service_relay = Service["${carbon_relay_daemon}"]
   } else {
     $service_relay = undef
   }
 
   if $::graphite::gr_enable_carbon_aggregator {
-    $service_aggregator = Service['carbon-aggregator']
+    $service_aggregator = Service["$carbon_aggregator_daemon"]
   } else {
     $service_aggregator = undef
   }
