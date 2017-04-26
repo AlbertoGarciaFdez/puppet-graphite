@@ -17,7 +17,7 @@
 #   Default is debian / redhat / systemd (autodected. see params.pp)
 # [*gr_service_dir*]
 #   Directory with the service files
-#   Default is /var/lib/systemd if systemd provider enabled, otherwise /etc/init.d
+#   Default is /etc/system/systemd on systemd provider, otherwise /etc/init.d
 # [*gr_pid_dir*]
 #   Directory to create service pids
 #   Default is /var/run/carbon
