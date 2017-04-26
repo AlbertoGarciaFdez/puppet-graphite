@@ -1,0 +1,15 @@
+[Unit]
+Description=Graphite Carbon Cache
+SourcePath=/etc/init.d/carbon-cache
+After=network.target
+
+[Service]
+Type=forking
+StandardOutput=syslog
+StandardError=syslog
+PIDFile=<%= scope.lookupvar($::graphite::gr_pid_dir) %>/carbon-cache.pid
+ExecStart=/etc/init.d/carbon-cache start
+ExecStop=/etc/init.d/carbon-cache stop
+
+[Install]
+WantedBy=multi-user.target

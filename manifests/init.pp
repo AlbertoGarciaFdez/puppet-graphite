@@ -15,6 +15,12 @@
 #   Service provider used to start, stop, restart etc. services managed by this
 #   module.
 #   Default is debian / redhat / systemd (autodected. see params.pp)
+# [*gr_service_dir*]
+#   Directory with the service files
+#   Default is /var/lib/systemd if systemd provider enabled, otherwise /etc/init.d
+# [*gr_pid_dir*]
+#   Directory to create service pids
+#   Default is /var/run/carbon
 # [*gr_enable_carbon_cache*]
 #   Enable carbon cache.
 #   Default is true.
@@ -537,6 +543,8 @@ class graphite (
   $gr_group                               = '',
   $gr_user                                = '',
   $gr_service_provider                    = $::graphite::params::service_provider,
+  $gr_service_dir                         = $::graphite::params::service_dir,
+  $gr_pid_dir                             = '/run/carbon',
   $gr_enable_carbon_cache                 = true,
   $gr_max_cache_size                      = inf,
   $gr_max_updates_per_second              = 500,

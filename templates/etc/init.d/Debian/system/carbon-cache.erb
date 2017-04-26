@@ -19,7 +19,7 @@ DAEMON=/usr/bin/$NAME
 USER=<%= scope.lookupvar('graphite::gr_user') %>
 GROUP=<%= scope.lookupvar('graphite::gr_group') %>
 CONFIG=<%= scope.lookupvar('graphite::config::carbon_conf_file') %>
-PIDDIR="/var/run/carbon/"
+PIDDIR=<%= scope.lookupvar('graphite::gr_pid_dir') %>
 DAEMON_ARGS="--config=${CONFIG}"
 SCRIPTNAME=/etc/init.d/$NAME
 

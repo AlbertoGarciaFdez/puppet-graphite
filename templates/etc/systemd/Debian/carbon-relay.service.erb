@@ -1,0 +1,15 @@
+[Unit]
+Description=Graphite Carbon Relay
+SourcePath=/etc/init.d/carbon-relay
+After=network.target
+
+[Service]
+Type=forking
+StandardOutput=syslog
+StandardError=syslog
+PIDFile=<%= scope.lookupvar($::graphite::gr_pid_dir) %>/carbon-relay.pid
+ExecStart=/etc/init.d/carbon-relay start
+ExecStop=/etc/init.d/carbon-relay stop
+
+[Install]
+WantedBy=multi-user.target

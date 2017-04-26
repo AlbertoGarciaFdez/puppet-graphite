@@ -16,7 +16,8 @@ class graphite::config inherits graphite::params {
   #            python-django-tagging, python-simplejson
   # optional:  python-ldap, python-memcache, memcached, python-sqlite
 
-  if ($::osfamily == 'RedHat' and $::operatingsystemrelease =~ /^7\.\d+/) or ($::graphite::gr_service_provider == 'systemd') {
+  if $::graphite::gr_service_provider == 'systemd' {
+
     $initscript_notify = [Exec['graphite-reload-systemd'],]
 
     exec { 'graphite-reload-systemd':
@@ -24,9 +25,19 @@ class graphite::config inherits graphite::params {
       path        => ['/usr/bin', '/usr/sbin', '/bin', '/sbin'],
       refreshonly => true,
     }
+
+    $carbon-cache_daemon = 'carbon-cache.service'
+    $carbon-aggregator_daemon = 'carbon-aggregator.service'
+    $carbon-relay_daemon = 'carbon-relay.service'
   } else {
+
     $initscript_notify = []
+
+    $carbon-cache_daemon = 'carbon-cache'
+    $carbon-aggregator_daemon = 'carbon-aggregator'
+    $carbon-relay_daemon = 'carbon-relay'
   }
+
 
   # we need an web server with python support
   # apache with mod_wsgi or nginx with gunicorn
@@ -306,13 +317,13 @@ class graphite::config inherits graphite::params {
   # startup carbon engine
 
   if $::graphite::gr_enable_carbon_cache {
-    service { 'carbon-cache':
+    service { "${carbon-cache_daemon}":
       ensure     => running,
       enable     => true,
       hasrestart => true,
       hasstatus  => true,
       provider   => $::graphite::gr_service_provider,
-      require    => File['/etc/init.d/carbon-cache'],
+      require    => File["${::graphite::gr_service_dir}/${carbon-cache_daemon}"],
     }
 
     file { '/etc/init.d/carbon-cache':
@@ -322,16 +333,26 @@ class graphite::config inherits graphite::params {
       require => File[$carbon_conf_file],
       notify  => $initscript_notify,
     }
+
+    if $service_provider == 'systemd' {
+      file { "${::graphite::gr_service_dir}/${carbon-cache_daemon}":
+        ensure  => present,
+        content => template("graphite/etc/systemd/${::osfamily}/carbon-cache.service.erb"),
+        mode    => '0750',
+        require => File['/etc/init.d/carbon-cache'],
+        notify  => $initscript_notify,
+      }
+    }
   }
 
   if $graphite::gr_enable_carbon_relay {
-    service { 'carbon-relay':
+    service { "${carbon-relay_daemon}":
       ensure     => running,
       enable     => true,
       hasrestart => true,
       hasstatus  => true,
       provider   => $::graphite::gr_service_provider,
-      require    => File['/etc/init.d/carbon-relay'],
+      require    => File["${::graphite::gr_service_dir}/${carbon-relay_daemon}"],
     }
 
     file { '/etc/init.d/carbon-relay':
@@ -341,16 +362,26 @@ class graphite::config inherits graphite::params {
       require => File[$carbon_conf_file],
       notify  => $initscript_notify,
     }
+
+    if $service_provider == 'systemd' {
+      file { "${::graphite::service_dir}/${carbon-relay_daemon}":
+        ensure  => present,
+        content => template("graphite/etc/systemd/${::osfamily}/carbon-relay.service.erb"),
+        mode    => '0750',
+        require => File['/etc/init.d/carbon-relay'],
+        notify  => $initscript_notify,
+      }
+    }
   }
 
   if $graphite::gr_enable_carbon_aggregator {
-    service { 'carbon-aggregator':
+    service { "${carbon-aggregator_daemon}":
       ensure     => running,
       enable     => true,
       hasrestart => true,
       hasstatus  => true,
       provider   => $::graphite::gr_service_provider,
-      require    => File['/etc/init.d/carbon-aggregator'],
+      require    => File["${graphite::gr_systemd_dir/etc/init.d/carbon-aggregator'],
     }
 
     file { '/etc/init.d/carbon-aggregator':

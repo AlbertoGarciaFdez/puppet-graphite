@@ -80,14 +80,18 @@ class graphite::params {
       if $::operatingsystem == 'Ubuntu' {
         if versioncmp($::lsbdistrelease, '15.10') == -1 {
           $service_provider   = 'debian'
+          $service_dir        = '/etc/init.d'
         } else {
           $service_provider   = 'systemd'
+          $service_dir        = '/etc/systemd/system'
         }
       } elsif $::operatingsystem == 'Debian' {
         if versioncmp($::lsbdistrelease, '8.0') == -1 {
           $service_provider   = 'debian'
+          $service_dir        = '/etc/init.d'
         } else {
           $service_provider   = 'systemd'
+          $service_dir        = '/etc/systemd/system'
         }
       }
 
@@ -167,12 +171,14 @@ class graphite::params {
           $apache_24        = false
           $graphitepkgs     = union($common_os_pkgs,['python-sqlite2', 'bitmap-fonts-compat', 'bitmap', 'pycairo','python-crypto'])
           $service_provider = 'redhat'
+          $service_dir      = '/etc/init.d'
         }
 
         /^7\.\d+/: {
           $apache_24        = true
           $graphitepkgs     = union($common_os_pkgs,['python-sqlite3dbm', 'dejavu-fonts-common', 'dejavu-sans-fonts', 'python-cairocffi','python2-crypto'])
           $service_provider = 'systemd'
+          $service_dir      = '/etc/systemd/system'
         }
 
         # Amazon Linux 20xx.xx
