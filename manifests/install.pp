@@ -145,9 +145,7 @@ class graphite::install inherits graphite::params {
       provider    => 'shell',
     }
     )
-  }
-
-  if $::graphite::gr_pip_install == "false" {
+  } else {
     file { $::graphite::gr_pid_dir:
       ensure  => directory,
       owner   => $::graphite::gr_user,
