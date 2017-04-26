@@ -1,15 +1,12 @@
 [Unit]
-Description=Graphite Carbon Aggregator
-SourcePath=/etc/init.d/carbon-aggregator
+Description=Graphite Carbon Aggregator instance -%i
 After=network.target
 
 [Service]
 Type=forking
-StandardOutput=syslog
-StandardError=syslog
-PIDFile=<%= scope.lookupvar('graphite::gr_pid_dir') %>/carbon-aggregator.pid
-ExecStart=/etc/init.d/carbon-aggregator start
-ExecStop=/etc/init.d/carbon-aggregator stop
+PIDFile=<%= scope.lookupvar('graphite::gr_pid_dir') %>/carbon-aggregator-%i.pid
+ExecStartPre=/bin/rm -f <%= scope.lookupvar('graphite::gr_pid_dir') %>/carbon-aggregator-%i.pid
+ExecStart=/usr/bin/carbon-aggregator start --config=<%= scope.lookupvar('graphite::config::carbon_conf_file')%> --instance=%i --pidfile=carbon-aggregator-%i.pid start
 
 [Install]
 WantedBy=multi-user.target

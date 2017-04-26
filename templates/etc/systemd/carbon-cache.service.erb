@@ -1,15 +1,13 @@
 [Unit]
-Description=Graphite Carbon Cache
-SourcePath=/etc/init.d/carbon-cache
+Description=Graphite Carbon Cache instance %i
 After=network.target
 
 [Service]
 Type=forking
-StandardOutput=syslog
-StandardError=syslog
-PIDFile=<%= scope.lookupvar('graphite::gr_pid_dir') %>/carbon-cache.pid
-ExecStart=/etc/init.d/carbon-cache start
-ExecStop=/etc/init.d/carbon-cache stop
+PIDFile=<%= scope.lookupvar('graphite::gr_pid_dir') %>/carbon-cache-%i.pid
+ExecStartPre=/bin/rm -f <%= scope.lookupvar('graphite::gr_pid_dir') %>/carbon-cache-%i.pid
+ExecStart=/usr/bin/carbon-cache --config=<%= scope.lookupvar('graphite::config::carbon_conf_file') %> --instance=%i --pidfile=carbon-cache-%i.pid start
+LimitNOFILE= <%= scope.lookupvar('graphite::gr_carbon_cache_ulimit') %>
 
 [Install]
 WantedBy=multi-user.target
