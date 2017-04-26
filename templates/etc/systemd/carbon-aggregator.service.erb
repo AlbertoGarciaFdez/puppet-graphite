@@ -7,7 +7,7 @@ After=network.target
 Type=forking
 StandardOutput=syslog
 StandardError=syslog
-PIDFile=<%= scope.lookupvar($::graphite::gr_pid_dir) %>/carbon-aggregator.pid
+PIDFile=<%= scope.lookupvar('$::graphite::gr_pid_dir') %>/carbon-aggregator.pid
 ExecStart=/etc/init.d/carbon-aggregator start
 ExecStop=/etc/init.d/carbon-aggregator stop
 
