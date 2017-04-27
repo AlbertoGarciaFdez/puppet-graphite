@@ -352,7 +352,7 @@ class graphite::config inherits graphite::params {
         require    => File["${::graphite::gr_service_dir}/carbon-cache"],
       }
 
-      file { "${::graphite::gr_service_dir/carbon-cache":
+      file { "${::graphite::gr_service_dir}/carbon-cache":
         ensure  => file,
         content => template("graphite/etc/init.d/${::osfamily}/${init_templates}/carbon-cache.erb"),
         mode    => '0750',
@@ -392,7 +392,7 @@ class graphite::config inherits graphite::params {
         require    => File["${::graphite::gr_service_dir}/carbon-relay"],
       }
 
-      file { "${::graphite::gr_service_dir/carbon-relay":
+      file { "${::graphite::gr_service_dir}/carbon-relay":
         ensure  => file,
         content => template("graphite/etc/init.d/${::osfamily}/${init_templates}/carbon-relay.erb"),
         mode    => '0750',
@@ -432,7 +432,7 @@ class graphite::config inherits graphite::params {
         require    => File["${::graphite::gr_service_dir}/carbon-aggregator"],
       }
 
-      file { "${::graphite::gr_service_dir/carbon-aggregator":
+      file { "${::graphite::gr_service_dir}/carbon-aggregator":
         ensure  => file,
         content => template("graphite/etc/init.d/${::osfamily}/${init_templates}/carbon-aggregator.erb"),
         mode    => '0750',
