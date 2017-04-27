@@ -324,8 +324,9 @@ class graphite::config inherits graphite::params {
 
   if $::graphite::gr_enable_carbon_cache {
     if $service_provider == 'systemd' {
-      "${::graphite::gr_cache_instances}".each |$instances| {
-        service { "carbon-cache@${instances[0]}":
+      "${::graphite:gr_cache_instances}".sort.each |$instance| {
+        notify{$instance:}
+        service { "carbon-cache@${instance[0]}":
           ensure     => running,
           enable     => true,
           hasrestart => true,
