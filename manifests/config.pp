@@ -339,7 +339,7 @@ class graphite::config inherits graphite::params {
         ensure  => present,
         content => template("graphite/etc/systemd/carbon-cache@.service.erb"),
         mode    => '0750',
-        require => File[$carbon_file],
+        require => File[$carbon_conf_file],
         notify  => $initscript_notify,
       }
     } else {
@@ -379,7 +379,7 @@ class graphite::config inherits graphite::params {
         ensure  => present,
         content => template("graphite/etc/systemd/carbon-relay@.service.erb"),
         mode    => '0750',
-        require => File[$carbon_file],
+        require => File[$carbon_conf_file],
         notify  => $initscript_notify,
       }
     } else {
@@ -419,7 +419,7 @@ class graphite::config inherits graphite::params {
         ensure  => present,
         content => template("graphite/etc/systemd/carbon-aggregator@.service.erb"),
         mode    => '0750',
-        require => File[$carbon_file],
+        require => File[$carbon_conf_file],
         notify  => $initscript_notify,
       }
     } else {
