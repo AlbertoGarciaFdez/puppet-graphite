@@ -323,87 +323,120 @@ class graphite::config inherits graphite::params {
   # startup carbon engine
 
   if $::graphite::gr_enable_carbon_cache {
-    service { 'carbon-cache':
-      ensure     => running,
-      enable     => true,
-      hasrestart => true,
-      hasstatus  => true,
-      provider   => $::graphite::gr_service_provider,
-      require    => File["${::graphite::gr_service_dir}/${carbon_cache_daemon}"],
-    }
-
-    file { '/etc/init.d/carbon-cache':
-      ensure  => file,
-      content => template("graphite/etc/init.d/${::osfamily}/${init_templates}/carbon-cache.erb"),
-      mode    => '0750',
-      require => File[$carbon_conf_file],
-      notify  => $initscript_notify,
-    }
-
     if $service_provider == 'systemd' {
-      file { "${::graphite::gr_service_dir}/${carbon_cache_daemon}":
+      "${::graphite::gr_cache_instances}".each |$instances| {
+        service { "carbon-cache@${instances}":
+          ensure     => running,
+          enable     => true,
+          hasrestart => true,
+          hasstatus  => true,
+          provider   => $::graphite::gr_service_provider,
+          require    => File["${::graphite::gr_service_dir}/carbon-cache@.service"],
+        }
+      }
+
+      file { "${::graphite::gr_service_dir}/carbon-cache@.service":
         ensure  => present,
         content => template("graphite/etc/systemd/carbon-cache@.service.erb"),
         mode    => '0750',
-        require => File['/etc/init.d/carbon-cache'],
+        require => File[$carbon_file],
+        notify  => $initscript_notify,
+      }
+    } else {
+      service { 'carbon-cache':
+        ensure     => running,
+        enable     => true,
+        hasrestart => true,
+        hasstatus  => true,
+        provider   => $::graphite::gr_service_provider,
+        require    => File["${::graphite::gr_service_dir}/carbon-cache"],
+      }
+
+      file { "${::graphite::gr_service_dir/carbon-cache":
+        ensure  => file,
+        content => template("graphite/etc/init.d/${::osfamily}/${init_templates}/carbon-cache.erb"),
+        mode    => '0750',
+        require => File[$carbon_conf_file],
         notify  => $initscript_notify,
       }
     }
   }
 
-  if $graphite::gr_enable_carbon_relay {
-    service { 'carbon-relay':
-      ensure     => running,
-      enable     => true,
-      hasrestart => true,
-      hasstatus  => true,
-      provider   => $::graphite::gr_service_provider,
-      require    => File["${::graphite::gr_service_dir}/${carbon_relay_daemon}"],
-    }
-
-    file { '/etc/init.d/carbon-relay':
-      ensure  => file,
-      content => template("graphite/etc/init.d/${::osfamily}/${init_templates}/carbon-relay.erb"),
-      mode    => '0750',
-      require => File[$carbon_conf_file],
-      notify  => $initscript_notify,
-    }
-
+  if $::graphite::gr_enable_carbon_relay {
     if $service_provider == 'systemd' {
-      file { "${::graphite::gr_service_dir}/${carbon_relay_daemon}":
+      "${::graphite::gr_relay_instances}".each |$instances| {
+        service { "carbon-relay@${instances}":
+          ensure     => running,
+          enable     => true,
+          hasrestart => true,
+          hasstatus  => true,
+          provider   => $::graphite::gr_service_provider,
+          require    => File["${::graphite::gr_service_dir}/carbon-relay@.service"],
+        }
+      }
+
+      file { "${::graphite::gr_service_dir}/carbon-relay@.service":
         ensure  => present,
         content => template("graphite/etc/systemd/carbon-relay@.service.erb"),
         mode    => '0750',
-        require => File['/etc/init.d/carbon-relay'],
+        require => File[$carbon_file],
+        notify  => $initscript_notify,
+      }
+    } else {
+      service { 'carbon-relay':
+        ensure     => running,
+        enable     => true,
+        hasrestart => true,
+        hasstatus  => true,
+        provider   => $::graphite::gr_service_provider,
+        require    => File["${::graphite::gr_service_dir}/carbon-relay"],
+      }
+
+      file { "${::graphite::gr_service_dir/carbon-relay":
+        ensure  => file,
+        content => template("graphite/etc/init.d/${::osfamily}/${init_templates}/carbon-relay.erb"),
+        mode    => '0750',
+        require => File[$carbon_conf_file],
         notify  => $initscript_notify,
       }
     }
   }
 
-  if $graphite::gr_enable_carbon_aggregator {
-    service { 'carbon-aggregator':
-      ensure     => running,
-      enable     => true,
-      hasrestart => true,
-      hasstatus  => true,
-      provider   => $::graphite::gr_service_provider,
-      require    => File["${graphite::gr_service_dir}/${carbon_aggregator_daemon}"],
-    }
-
-    file { '/etc/init.d/carbon-aggregator':
-      ensure  => file,
-      content => template("graphite/etc/init.d/${::osfamily}/${init_templates}/carbon-aggregator.erb"),
-      mode    => '0750',
-      require => File[$carbon_conf_file],
-      notify  => $initscript_notify,
-    }
-
+  if $::graphite::gr_enable_carbon_aggregator {
     if $service_provider == 'systemd' {
-      file { "${::graphite::gr_service_dir}/${carbon_aggregator_daemon}":
+      "${::graphite::gr_aggregator_instances}".each |$instances| {
+        service { "carbon-aggregator@${instances}":
+          ensure     => running,
+          enable     => true,
+          hasrestart => true,
+          hasstatus  => true,
+          provider   => $::graphite::gr_service_provider,
+          require    => File["${::graphite::gr_service_dir}/carbon-aggregator@.service"],
+        }
+      }
+
+      file { "${::graphite::gr_service_dir}/carbon-aggregator@.service":
         ensure  => present,
         content => template("graphite/etc/systemd/carbon-aggregator@.service.erb"),
         mode    => '0750',
-        require => File['/etc/init.d/carbon-relay'],
+        require => File[$carbon_file],
+        notify  => $initscript_notify,
+      }
+    } else {
+      service { 'carbon-aggregator':
+        ensure     => running,
+        enable     => true,
+        hasrestart => true,
+        hasstatus  => true,
+        provider   => $::graphite::gr_service_provider,
+        require    => File["${::graphite::gr_service_dir}/carbon-aggregator"],
+      }
+
+      file { "${::graphite::gr_service_dir/carbon-aggregator":
+        ensure  => file,
+        content => template("graphite/etc/init.d/${::osfamily}/${init_templates}/carbon-aggregator.erb"),
+        mode    => '0750',
+        require => File[$carbon_conf_file],
         notify  => $initscript_notify,
       }
     }
