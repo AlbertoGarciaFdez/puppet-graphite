@@ -213,41 +213,34 @@ class graphite::config inherits graphite::params {
 
   # configure carbon engines
 
-  $service_cache = undef
-  $service_relay = undef
-  $service_aggregator = undef
-
   if $::graphite::gr_enable_carbon_cache {
     if $service_provider == 'systemd' {
-      $service_cache = []
-      "${::graphite::gr_cache_instances}".each |$name| {
-        $service_cache = $service_cache + Service["carbon-cache@${name}"]
-      }
+      $service_cache = "${::graphite::gr_cache_instances}".map |$name| { Service["carbon-cache@${name}"] }
     } else {
       $service_cache = Service['carbon-cache']
     }
+  } else {
+    $service_cache = undef
   }
 
   if $::graphite::gr_enable_carbon_relay {
     if $service_provider == 'systemd' {
-      $service_relay = []
-      "${::graphite::gr_relay_instances}".each |$name| {
-        $service_relay = $service_relay + Service["carbon-relay@${name}"]
-      }
+      $service_relay = "${::graphite::gr_relay_instances}".map |$name| { Service["carbon-relay@${name}"] }
     } else {
       $service_relay = Service['carbon-relay']
     }
+  } else {
+    $service_relay = undef
   }
 
   if $::graphite::gr_enable_carbon_aggregator {
     if $service_provider == 'systemd' {
-      $service_aggregator = []
-      "${::graphite::gr_cache_instances}".each |$name| {
-        $service_aggregator = $service_aggregator + Service["carbon-aggregator@${name}"]
-      }
+      $service_aggregator = "${::graphite::gr_aggregator_instances}".map |$name| { Service["carbon-aggregator@${name}"] }
     } else {
-      $service_aggregator = Service['carbon-aggregator']
+      $service_relay = Service['carbon-aggregator']
     }
+  } else {
+    $service_aggregator = undef
   }
 
   $notify_services = delete_undef_values([$service_cache, $service_relay, $service_aggregator])
